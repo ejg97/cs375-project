@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Project</title>
+  <title>Movie Reviews</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main>
-    <h1>My Project</h1>
-    <button id="load-btn">Load message</button>
-    <p id="output"></p>
+    <h1>Movie Reviews</h1>
+    <form id="search-form">
+      <input type="text" id="search-input" placeholder="Search movies..." autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
   </main>
 
-  <script src="script.js"></script>
+  <script src="search.js"></script>
 </body>
 </html>

@@ -32,6 +32,9 @@ function renderResults(movies) {
   }
 
   results.innerHTML = movies.map((movie) => {
+    console.log(movie);
+    addMovieToDB();
+
     const posterUrl = movie.posterPath
       ? `https://image.tmdb.org/t/p/w342${movie.posterPath}`
       : '';
@@ -44,4 +47,27 @@ function renderResults(movies) {
       </a>
     `;
   }).join('');
+}
+
+
+/*
+
+CREATE TABLE movies (
+  id           SERIAL PRIMARY KEY,
+  tmdb_id      INTEGER NOT NULL UNIQUE,
+  title        TEXT NOT NULL,
+  poster_path  TEXT,          -- TMDB fragment e.g. '/abc.jpg', often null
+  release_year INTEGER
+);
+
+actual json {
+}
+
+*/
+
+
+// add movie to the database
+function addMovieToDB() {
+  
+
 }

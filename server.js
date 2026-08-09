@@ -1,10 +1,25 @@
+import { Pool } from 'pg';
+
 require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
 
+const username = process.env.DATABASE_USERNAME;
+const password = process.env.DATABASE_PASSWORD;
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+
+const pool = new Pool({
+  user: username,
+  host: 'localhost',
+  database: 'moviereview',
+  password: password,
+  port: 5432,
+});
 
 // parse JSON bodies on incoming requests
 app.use(express.json());

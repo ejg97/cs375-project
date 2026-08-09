@@ -1,17 +1,14 @@
-import { Pool } from 'pg';
-
 require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+const { Pool } = require('pg');
 
 const username = process.env.DATABASE_USERNAME;
 const password = process.env.DATABASE_PASSWORD;
 
-
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 
 const pool = new Pool({
   user: username,
@@ -32,7 +29,6 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from the server' });
 });
 
-// GET /api/movies/search?q=
 app.get('/api/movies/search', async (req, res) => {
   const q = req.query.q;
 
@@ -66,6 +62,33 @@ app.get('/api/movies/search', async (req, res) => {
   });
 
   res.json(results);
+});
+
+app.get('/api/movies/:id', async (req, res) => {
+  const id = req.params.id;
+
+  const tmdbUrl = `https://api.themoviedb.org/3/movie/${encodeURIComponent(id)}?api_key=${process.env.TMDB_KEY}`;
+
+  let tmdbRes;
+  try {
+    tmdbRes = await fetch(tmdbUrl);
+  } catch (err) {
+    return res.status(502).json({ error: 'Failed to reach TMDB' });
+  }
+
+  if (!tmdbRes.ok) {
+    return res.status(502).json({ error: 'TMDB request failed' });
+  }
+
+  const movie = await tmdbRes.json();
+
+  res.json({
+    tmdbId: movie.id,
+    title: movie.title,
+    posterPath: movie.poster_path,
+    year: movie.release_date ? movie.release_date.slice(0, 4) : null,
+    overview: movie.overview,
+  });
 });
 
 app.listen(PORT, () => {

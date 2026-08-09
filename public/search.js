@@ -1,12 +1,7 @@
 const form = document.getElementById('search-form');
 const input = document.getElementById('search-input');
 const results = document.getElementById('results');
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+const template = document.getElementById('result-template');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -21,53 +16,40 @@ form.addEventListener('submit', async (e) => {
     const movies = await res.json();
     renderResults(movies);
   } catch (err) {
-    results.innerHTML = `<p>Error: ${escapeHtml(err.message)}</p>`;
+    results.innerHTML = '<p>Something went wrong. Try again.</p>';
+    console.error(err);
   }
 });
 
 function renderResults(movies) {
+  results.innerHTML = '';
+
   if (movies.length === 0) {
     results.innerHTML = '<p>No results found.</p>';
     return;
   }
 
-  results.innerHTML = movies.map((movie) => {
-    console.log(movie);
-    addMovieToDB();
-
-    const posterUrl = movie.posterPath
-      ? `https://image.tmdb.org/t/p/w342${movie.posterPath}`
-      : '';
-    const year = movie.year ? ` (${movie.year})` : '';
-
-    return `
-      <a class="result" href="movie.html?id=${movie.tmdbId}">
-        ${posterUrl ? `<img src="${posterUrl}" alt="${escapeHtml(movie.title)} poster">` : ''}
-        <span class="result-title">${escapeHtml(movie.title)}${year}</span>
-      </a>
-    `;
-  }).join('');
+  for (const movie of movies) {
+    results.appendChild(makeResult(movie));
+  }
 }
 
+function makeResult(movie) {
+  const node = template.content.cloneNode(true);
 
-/*
+  const link = node.querySelector('.result');
+  link.href = `movie.html?id=${movie.tmdbId}`;
 
-CREATE TABLE movies (
-  id           SERIAL PRIMARY KEY,
-  tmdb_id      INTEGER NOT NULL UNIQUE,
-  title        TEXT NOT NULL,
-  poster_path  TEXT,          -- TMDB fragment e.g. '/abc.jpg', often null
-  release_year INTEGER
-);
+  const title = movie.year ? `${movie.title} (${movie.year})` : movie.title;
+  node.querySelector('.result-title').textContent = title;
 
-actual json {
-}
+  const poster = node.querySelector('.result-poster');
+  if (movie.posterPath) {
+    poster.src = `https://image.tmdb.org/t/p/w342${movie.posterPath}`;
+    poster.alt = `${movie.title} poster`;
+  } else {
+    poster.remove(); 
+  }
 
-*/
-
-
-// add movie to the database
-function addMovieToDB() {
-  
-
+  return node;
 }

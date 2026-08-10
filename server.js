@@ -91,6 +91,74 @@ app.get('/api/movies/:id', async (req, res) => {
   });
 });
 
+app.get('/api/movies/:id/reviews', async (req, res) => {
+  const tmdbId = req.params.id;
+
+  const result = await pool.query(
+    `SELECT reviews.id, reviews.rating, reviews.body, reviews.created_at, users.username
+     FROM reviews
+     JOIN movies ON reviews.movie_id = movies.id
+     JOIN users  ON reviews.user_id  = users.id
+     WHERE movies.tmdb_id = $1
+     ORDER BY reviews.created_at DESC`,
+    [tmdbId]
+  );
+
+  const reviews = result.rows.map((row) => ({
+    id: row.id,
+    rating: row.rating,
+    body: row.body,
+    createdAt: row.created_at,
+    username: row.username,
+  }));
+
+  res.json(reviews);
+});
+
+app.post('/api/reviews', async (req, res) => {
+  const { tmdbId, title, posterPath, rating, body } = req.body;
+
+  if (!tmdbId || !title) {
+    return res.status(400).json({ error: 'tmdbId and title are required' });
+  }
+
+  const ratingNum = Number(rating);
+  if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+    return res.status(400).json({ error: 'rating must be an integer between 1 and 5' });
+  }
+
+  const userId = 1; // TODO: replace with req.session.userId
+
+  const movieResult = await pool.query(
+    `INSERT INTO movies (tmdb_id, title, poster_path)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (tmdb_id) DO UPDATE SET title = EXCLUDED.title
+     RETURNING id`,
+    [tmdbId, title, posterPath || null]
+  );
+  const movieId = movieResult.rows[0].id;
+
+  const reviewResult = await pool.query(
+    `INSERT INTO reviews (user_id, movie_id, rating, body)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (user_id, movie_id) DO UPDATE
+       SET rating = EXCLUDED.rating, body = EXCLUDED.body, updated_at = NOW()
+     RETURNING id, rating, body, created_at`,
+    [userId, movieId, ratingNum, body || null]
+  );
+  const review = reviewResult.rows[0];
+
+  const userResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
+
+  res.status(201).json({
+    id: review.id,
+    rating: review.rating,
+    body: review.body,
+    createdAt: review.created_at,
+    username: userResult.rows[0].username,
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

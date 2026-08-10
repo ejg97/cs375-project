@@ -15,8 +15,35 @@
       <p id="movie-year"></p>
       <p id="movie-overview"></p>
     </div>
+
+    <section id="review-form-section">
+      <h2>Write a review</h2>
+      <form id="review-form">
+        <label for="review-rating">Rating</label>
+        <select id="review-rating" required>
+          <option value="">Select...</option>
+          <option value="1">1 - Terrible</option>
+          <option value="2">2 - Bad</option>
+          <option value="3">3 - Okay</option>
+          <option value="4">4 - Good</option>
+          <option value="5">5 - Great</option>
+        </select>
+        <br>
+        <label for="review-body">Review</label>
+        <br>
+        <textarea id="review-body" rows="4" cols="50"></textarea>
+        <br>
+        <button type="submit">Submit review</button>
+      </form>
+    </section>
+
+    <section id="reviews-section">
+      <h2>Reviews</h2>
+      <div id="reviews"></div>
+    </section>
   </main>
 
+  <script src="escapeHtml.js"></script>
   <script src="movie.js"></script>
 </body>
 </html>

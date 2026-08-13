@@ -5,3 +5,17 @@ body {
   padding: 0 1rem;
   line-height: 1.5;
 }
+
+.site-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1rem;
+  border-bottom: 1px solid #ccc;
+}
+
+.form-error {
+  color: #b00020;
+}

@@ -6,6 +6,7 @@ const titleEl = document.getElementById('movie-title');
 const yearEl = document.getElementById('movie-year');
 const overviewEl = document.getElementById('movie-overview');
 const reviewsEl = document.getElementById('reviews');
+const reviewFormSection = document.getElementById('review-form-section');
 const reviewForm = document.getElementById('review-form');
 const ratingInput = document.getElementById('review-rating');
 const bodyInput = document.getElementById('review-body');
@@ -13,6 +14,13 @@ const bodyInput = document.getElementById('review-body');
 // filled in once the movie loads; needed to lazily create the local
 // movies row when a review is submitted
 let currentMovie = null;
+
+async function loadReviewForm() {
+  const res = await fetch('/api/me');
+  if (res.ok) return;
+
+  reviewFormSection.innerHTML = '<h2>Write a review</h2><p>You must <a href="login.html">log in</a> to write a review.</p>';
+}
 
 async function loadMovie() {
   if (!id) {
@@ -95,7 +103,15 @@ reviewForm.addEventListener('submit', async (e) => {
       }),
     });
 
-    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        alert('You must be logged in to write a review.');
+      } else {
+        alert(data.error || 'Could not submit review. Try again.');
+      }
+      return;
+    }
 
     reviewForm.reset();
     await loadReviews();
@@ -107,3 +123,4 @@ reviewForm.addEventListener('submit', async (e) => {
 
 loadMovie();
 loadReviews();
+loadReviewForm();

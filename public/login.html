@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in - Movie Reviews</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-nav">
+    <a href="index.html">Movie Reviews</a>
+    <span id="nav-user"></span>
+  </header>
+
+  <main>
+    <h1>Log in</h1>
+    <form id="login-form">
+      <label for="login-username">Username</label>
+      <br>
+      <input type="text" id="login-username" autocomplete="username" required>
+      <br>
+      <label for="login-password">Password</label>
+      <br>
+      <input type="password" id="login-password" autocomplete="current-password" required>
+      <br>
+      <button type="submit">Log in</button>
+    </form>
+    <p id="login-error" class="form-error"></p>
+    <p>Don't have an account? <a href="signup.html">Sign up here</a>.</p>
+  </main>
+
+  <script src="escapeHtml.js"></script>
+  <script src="nav.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

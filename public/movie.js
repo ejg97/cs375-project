@@ -75,7 +75,7 @@ function showReviews(reviews) {
 
   reviewsEl.innerHTML = reviews.map((review) => `
     <div class="review">
-      <p class="review-meta"><strong>${escapeHtml(review.username)}</strong> - ${review.rating} / 5</p>
+      <p class="review-meta"><a href="profile.html?username=${encodeURIComponent(review.username)}">${escapeHtml(review.username)}</a> - ${review.rating} / 5</p>
       <p class="review-body">${escapeHtml(review.body || '')}</p>
     </div>
   `).join('');

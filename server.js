@@ -245,6 +245,49 @@ app.post('/api/reviews', async (req, res) => {
   });
 });
 
+app.get('/api/users/:username', async (req, res) => {
+  const username = req.params.username;
+
+  const result = await pool.query(
+    'SELECT id, username, created_at FROM users WHERE username = $1',
+    [username]
+  );
+  const user = result.rows[0];
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  res.json({ id: user.id, username: user.username, createdAt: user.created_at });
+});
+
+app.get('/api/users/:username/reviews', async (req, res) => {
+  const username = req.params.username;
+
+  const result = await pool.query(
+    `SELECT reviews.id, reviews.rating, reviews.body, reviews.created_at,
+            movies.tmdb_id, movies.title, movies.poster_path
+     FROM reviews
+     JOIN movies ON reviews.movie_id = movies.id
+     JOIN users  ON reviews.user_id  = users.id
+     WHERE users.username = $1
+     ORDER BY reviews.created_at DESC`,
+    [username]
+  );
+
+  const reviews = result.rows.map((row) => ({
+    id: row.id,
+    rating: row.rating,
+    body: row.body,
+    createdAt: row.created_at,
+    tmdbId: row.tmdb_id,
+    title: row.title,
+    posterPath: row.poster_path,
+  }));
+
+  res.json(reviews);
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

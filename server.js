@@ -39,6 +39,15 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from the server' });
 });
 
+function mapTmdbMovie(movie) {
+  return {
+    tmdbId: movie.id,
+    title: movie.title,
+    posterPath: movie.poster_path,
+    year: movie.release_date ? movie.release_date.slice(0, 4) : null,
+  };
+}
+
 app.get('/api/movies/search', async (req, res) => {
   const q = req.query.q;
 
@@ -61,17 +70,29 @@ app.get('/api/movies/search', async (req, res) => {
 
   const data = await tmdbRes.json();
 
-  const results = data.results.map((movie) => {
-    const year = movie.release_date ? movie.release_date.slice(0, 4) : null;
-    return {
-      tmdbId: movie.id,
-      title: movie.title,
-      posterPath: movie.poster_path,
-      year: year || null,
-    };
-  });
+  res.json(data.results.map(mapTmdbMovie));
+});
 
-  res.json(results);
+// Passthrough to TMDB's currently-popular list, used to fill the homepage
+// before the user has searched for anything. Same shape as /search, no DB
+// writes — movies rows are only ever created lazily when reviewed.
+app.get('/api/movies/popular', async (req, res) => {
+  const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_KEY}`;
+
+  let tmdbRes;
+  try {
+    tmdbRes = await fetch(tmdbUrl);
+  } catch (err) {
+    return res.status(502).json({ error: 'Failed to reach TMDB' });
+  }
+
+  if (!tmdbRes.ok) {
+    return res.status(502).json({ error: 'TMDB request failed' });
+  }
+
+  const data = await tmdbRes.json();
+
+  res.json(data.results.map(mapTmdbMovie));
 });
 
 app.get('/api/movies/:id', async (req, res) => {

@@ -4,25 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Movie Reviews</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AC</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">🎬 Movie Reviews</a>
+      <p class="tagline">Search, rate, and review anything TMDB knows about</p>
+    </div>
+  </header>
+
   <main>
-    <h1>Movie Reviews</h1>
-    <form id="search-form">
-      <input type="text" id="search-input" placeholder="Search movies..." autocomplete="off">
-      <button type="submit">Search</button>
-    </form>
-    <div id="results"></div>
+    <section class="hero">
+      <h1>Find your next favorite movie</h1>
+      <p>Search TMDB's catalog, then rate and review what you watch.</p>
+      <form id="search-form">
+        <input type="text" id="search-input" placeholder="Search movies..." autocomplete="off">
+        <button type="submit" class="btn">Search</button>
+      </form>
+    </section>
+
+    <section class="results-section">
+      <div class="results-header">
+        <h2 id="results-heading">Popular Movies</h2>
+        <button type="button" id="clear-search" class="link-button" hidden>Clear search</button>
+      </div>
+      <div id="results" class="movie-grid"></div>
+    </section>
   </main>
 
   <template id="result-template">
-    <a class="result">
-      <img class="result-poster" alt="">
-      <span class="result-title"></span>
+    <a class="movie-card">
+      <div class="movie-card-poster">
+        <img class="movie-card-img" alt="">
+      </div>
+      <div class="movie-card-body">
+        <h3 class="movie-card-title"></h3>
+        <p class="movie-card-year"></p>
+      </div>
     </a>
   </template>
 
+  <script src="escapeHtml.js"></script>
   <script src="search.js"></script>
 </body>
 </html>

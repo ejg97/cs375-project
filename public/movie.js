@@ -8,6 +8,7 @@ const yearEl = document.getElementById('movie-year');
 const ratingSummaryEl = document.getElementById('movie-rating-summary');
 const overviewEl = document.getElementById('movie-overview');
 const reviewsEl = document.getElementById('reviews');
+const reviewFormSection = document.getElementById('review-form-section');
 const reviewForm = document.getElementById('review-form');
 const ratingError = document.getElementById('rating-error');
 const reviewSubmitButton = document.getElementById('review-submit');
@@ -141,7 +142,15 @@ reviewForm.addEventListener('submit', async (e) => {
       }),
     });
 
-    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        alert('You must be logged in to write a review.');
+      } else {
+        alert(data.error || 'Could not submit review. Try again.');
+      }
+      return;
+    }
 
     reviewForm.reset();
     await loadReviews();

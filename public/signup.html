@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign up - Movie Reviews</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-nav">
+    <a href="index.html">Movie Reviews</a>
+    <span id="nav-user"></span>
+  </header>
+
+  <main>
+    <h1>Create an account</h1>
+    <form id="signup-form">
+      <label for="signup-username">Username</label>
+      <br>
+      <input type="text" id="signup-username" autocomplete="username" required>
+      <br>
+      <label for="signup-password">Password</label>
+      <br>
+      <input type="password" id="signup-password" autocomplete="new-password" required minlength="8">
+      <br>
+      <label for="signup-confirm-password">Confirm password</label>
+      <br>
+      <input type="password" id="signup-confirm-password" autocomplete="new-password" required minlength="8">
+      <br>
+      <button type="submit">Create account</button>
+    </form>
+    <p id="signup-error" class="form-error"></p>
+    <p>Already have an account? <a href="login.html">Log in here</a>.</p>
+  </main>
+
+  <script src="escapeHtml.js"></script>
+  <script src="nav.js"></script>
+  <script src="signup.js"></script>
+</body>
+</html>

@@ -4,33 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign up - Movie Reviews</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AC</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-nav">
-    <a href="index.html">Movie Reviews</a>
-    <span id="nav-user"></span>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">🎬 Movie Reviews</a>
+      <span id="nav-user"></span>
+    </div>
   </header>
 
-  <main>
-    <h1>Create an account</h1>
-    <form id="signup-form">
-      <label for="signup-username">Username</label>
-      <br>
-      <input type="text" id="signup-username" autocomplete="username" required>
-      <br>
-      <label for="signup-password">Password</label>
-      <br>
-      <input type="password" id="signup-password" autocomplete="new-password" required minlength="8">
-      <br>
-      <label for="signup-confirm-password">Confirm password</label>
-      <br>
-      <input type="password" id="signup-confirm-password" autocomplete="new-password" required minlength="8">
-      <br>
-      <button type="submit">Create account</button>
-    </form>
-    <p id="signup-error" class="form-error"></p>
-    <p>Already have an account? <a href="login.html">Log in here</a>.</p>
+  <main class="auth-main">
+    <a class="back-link" href="index.html">&larr; Back to search</a>
+
+    <section class="card auth-card">
+      <h1>Create an account</h1>
+      <form id="signup-form">
+        <div class="form-row">
+          <label for="signup-username">Username</label>
+          <input type="text" id="signup-username" autocomplete="username" required>
+        </div>
+        <div class="form-row">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" autocomplete="new-password" required minlength="8">
+        </div>
+        <div class="form-row">
+          <label for="signup-confirm-password">Confirm password</label>
+          <input type="password" id="signup-confirm-password" autocomplete="new-password" required minlength="8">
+        </div>
+        <p id="signup-error" class="form-error"></p>
+        <div class="form-row">
+          <button type="submit" class="btn">Create account</button>
+        </div>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="login.html">Log in here</a>.</p>
+    </section>
   </main>
 
   <script src="escapeHtml.js"></script>

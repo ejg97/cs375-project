@@ -23,6 +23,13 @@ function starsHtml(rating) {
   return `<span class="stars" aria-label="${rating} out of 5 stars"><span class="stars-fill" style="width:${pct}%"></span></span>`;
 }
 
+async function loadReviewForm() {
+  const res = await fetch('/api/me');
+  if (res.ok) return;
+
+  reviewFormSection.innerHTML = '<h2>Write a review</h2><p>You must <a href="login.html">log in</a> to write a review.</p>';
+}
+
 async function loadMovie() {
   if (!id) {
     titleEl.textContent = 'No movie id in the URL.';
@@ -165,3 +172,4 @@ reviewForm.addEventListener('submit', async (e) => {
 
 loadMovie();
 loadReviews();
+loadReviewForm();

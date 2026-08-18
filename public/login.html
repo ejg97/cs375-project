@@ -4,29 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Log in - Movie Reviews</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AC</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-nav">
-    <a href="index.html">Movie Reviews</a>
-    <span id="nav-user"></span>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">🎬 Movie Reviews</a>
+      <span id="nav-user"></span>
+    </div>
   </header>
 
-  <main>
-    <h1>Log in</h1>
-    <form id="login-form">
-      <label for="login-username">Username</label>
-      <br>
-      <input type="text" id="login-username" autocomplete="username" required>
-      <br>
-      <label for="login-password">Password</label>
-      <br>
-      <input type="password" id="login-password" autocomplete="current-password" required>
-      <br>
-      <button type="submit">Log in</button>
-    </form>
-    <p id="login-error" class="form-error"></p>
-    <p>Don't have an account? <a href="signup.html">Sign up here</a>.</p>
+  <main class="auth-main">
+    <a class="back-link" href="index.html">&larr; Back to search</a>
+
+    <section class="card auth-card">
+      <h1>Log in</h1>
+      <form id="login-form">
+        <div class="form-row">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" autocomplete="username" required>
+        </div>
+        <div class="form-row">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" autocomplete="current-password" required>
+        </div>
+        <p id="login-error" class="form-error"></p>
+        <div class="form-row">
+          <button type="submit" class="btn">Log in</button>
+        </div>
+      </form>
+      <p class="auth-switch">Don't have an account? <a href="signup.html">Sign up here</a>.</p>
+    </section>
   </main>
 
   <script src="escapeHtml.js"></script>

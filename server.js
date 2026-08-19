@@ -124,6 +124,7 @@ app.get('/api/movies/:id', async (req, res) => {
 
 app.get('/api/movies/:id/reviews', async (req, res) => {
   const tmdbId = req.params.id;
+  const userId = req.session.userId || null;
 
   const result = await pool.query(
     `SELECT reviews.id, reviews.rating, reviews.body, reviews.created_at, users.username
@@ -135,15 +136,100 @@ app.get('/api/movies/:id/reviews', async (req, res) => {
     [tmdbId]
   );
 
-  const reviews = result.rows.map((row) => ({
-    id: row.id,
-    rating: row.rating,
-    body: row.body,
-    createdAt: row.created_at,
-    username: row.username,
-  }));
+  const reviewIds = result.rows.map((row) => row.id);
+  const votesByReview = new Map();
+
+  if (reviewIds.length > 0) {
+    const votesResult = await pool.query(
+      'SELECT review_id, user_id, value FROM review_votes WHERE review_id = ANY($1::int[])',
+      [reviewIds]
+    );
+
+    for (const vote of votesResult.rows) {
+      if (!votesByReview.has(vote.review_id)) {
+        votesByReview.set(vote.review_id, { likes: 0, dislikes: 0, myVote: 0 });
+      }
+      const tally = votesByReview.get(vote.review_id);
+      if (vote.value === 1) tally.likes++;
+      else tally.dislikes++;
+      if (vote.user_id === userId) tally.myVote = vote.value;
+    }
+  }
+
+  const reviews = result.rows.map((row) => {
+    const tally = votesByReview.get(row.id) || { likes: 0, dislikes: 0, myVote: 0 };
+    return {
+      id: row.id,
+      rating: row.rating,
+      body: row.body,
+      createdAt: row.created_at,
+      username: row.username,
+      likes: tally.likes,
+      dislikes: tally.dislikes,
+      myVote: tally.myVote,
+    };
+  });
 
   res.json(reviews);
+});
+
+app.post('/api/reviews/:id/vote', async (req, res) => {
+  const reviewId = req.params.id;
+  const userId = req.session.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'You must be logged in to vote' });
+  }
+
+  const value = Number(req.body.value);
+  if (value !== 1 && value !== -1) {
+    return res.status(400).json({ error: 'value must be 1 (like) or -1 (dislike)' });
+  }
+
+  const existing = await pool.query(
+    'SELECT value FROM review_votes WHERE review_id = $1 AND user_id = $2',
+    [reviewId, userId]
+  );
+
+  try {
+    if (existing.rows[0] && existing.rows[0].value === value) {
+      // voting the same way again clears the vote
+      await pool.query(
+        'DELETE FROM review_votes WHERE review_id = $1 AND user_id = $2',
+        [reviewId, userId]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO review_votes (review_id, user_id, value)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (review_id, user_id) DO UPDATE SET value = EXCLUDED.value`,
+        [reviewId, userId, value]
+      );
+    }
+  } catch (err) {
+    if (err.code === '23503') {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    throw err;
+  }
+
+  const counts = await pool.query(
+    `SELECT COUNT(*) FILTER (WHERE value = 1)  AS likes,
+            COUNT(*) FILTER (WHERE value = -1) AS dislikes
+     FROM review_votes
+     WHERE review_id = $1`,
+    [reviewId]
+  );
+  const myVoteResult = await pool.query(
+    'SELECT value FROM review_votes WHERE review_id = $1 AND user_id = $2',
+    [reviewId, userId]
+  );
+
+  res.json({
+    likes: Number(counts.rows[0].likes),
+    dislikes: Number(counts.rows[0].dislikes),
+    myVote: myVoteResult.rows[0] ? myVoteResult.rows[0].value : 0,
+  });
 });
 
 app.post('/api/signup', async (req, res) => {

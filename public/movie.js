@@ -104,7 +104,7 @@ function showReviews(reviews) {
     });
 
     return `
-      <div class="review">
+      <div class="review" data-review-id="${review.id}">
         <div class="review-header">
           <div class="review-avatar">${initial}</div>
           <div class="review-meta">
@@ -114,10 +114,55 @@ function showReviews(reviews) {
           </div>
         </div>
         <p class="review-body">${escapeHtml(review.body || '')}</p>
+        <div class="review-votes">
+          <button type="button" class="vote-btn vote-like${review.myVote === 1 ? ' active' : ''}" data-value="1">
+            👍 <span class="vote-count">${review.likes}</span>
+          </button>
+          <button type="button" class="vote-btn vote-dislike${review.myVote === -1 ? ' active' : ''}" data-value="-1">
+            👎 <span class="vote-count">${review.dislikes}</span>
+          </button>
+        </div>
       </div>
     `;
   }).join('');
 }
+
+reviewsEl.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.vote-btn');
+  if (!btn) return;
+
+  const reviewEl = btn.closest('.review');
+  const reviewId = reviewEl.dataset.reviewId;
+  const value = Number(btn.dataset.value);
+
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/reviews/${encodeURIComponent(reviewId)}/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    });
+
+    if (res.status === 401) {
+      alert('You must be logged in to vote on reviews.');
+      return;
+    }
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+    const { likes, dislikes, myVote } = await res.json();
+    const likeBtn = reviewEl.querySelector('.vote-like');
+    const dislikeBtn = reviewEl.querySelector('.vote-dislike');
+    likeBtn.querySelector('.vote-count').textContent = likes;
+    dislikeBtn.querySelector('.vote-count').textContent = dislikes;
+    likeBtn.classList.toggle('active', myVote === 1);
+    dislikeBtn.classList.toggle('active', myVote === -1);
+  } catch (err) {
+    alert('Could not record your vote. Try again.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 reviewForm.addEventListener('submit', async (e) => {
   e.preventDefault();

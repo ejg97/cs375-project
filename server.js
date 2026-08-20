@@ -352,6 +352,26 @@ app.post('/api/reviews', async (req, res) => {
   });
 });
 
+// Registered before /api/users/:username so the literal path "search"
+// isn't swallowed as a :username value.
+app.get('/api/users/search', async (req, res) => {
+  const q = req.query.q;
+
+  if (!q || !q.trim()) {
+    return res.status(400).json({ error: 'q query parameter is required' });
+  }
+
+  const result = await pool.query(
+    `SELECT username, created_at FROM users
+     WHERE username ILIKE '%' || $1 || '%'
+     ORDER BY username
+     LIMIT 20`,
+    [q.trim()]
+  );
+
+  res.json(result.rows.map((row) => ({ username: row.username, createdAt: row.created_at })));
+});
+
 app.get('/api/users/:username', async (req, res) => {
   const username = req.params.username;
 
@@ -393,6 +413,165 @@ app.get('/api/users/:username/reviews', async (req, res) => {
   }));
 
   res.json(reviews);
+});
+
+app.get('/api/users/:username/friends', async (req, res) => {
+  const userResult = await pool.query('SELECT id FROM users WHERE username = $1', [req.params.username]);
+  const user = userResult.rows[0];
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  // friendship is symmetric but stored as one directional row, so pick
+  // whichever id on the row isn't this user
+  const result = await pool.query(
+    `SELECT users.username
+     FROM friendships
+     JOIN users ON users.id = CASE WHEN friendships.requester_id = $1
+                                    THEN friendships.addressee_id
+                                    ELSE friendships.requester_id END
+     WHERE (friendships.requester_id = $1 OR friendships.addressee_id = $1)
+       AND friendships.status = 'accepted'
+     ORDER BY users.username`,
+    [user.id]
+  );
+
+  res.json(result.rows.map((row) => ({ username: row.username })));
+});
+
+app.get('/api/friends/requests/incoming', async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'You must be logged in' });
+  }
+
+  const result = await pool.query(
+    `SELECT users.username
+     FROM friendships
+     JOIN users ON users.id = friendships.requester_id
+     WHERE friendships.addressee_id = $1 AND friendships.status = 'pending'
+     ORDER BY friendships.created_at`,
+    [userId]
+  );
+
+  res.json(result.rows.map((row) => ({ username: row.username })));
+});
+
+app.get('/api/friends/:username/status', async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'You must be logged in' });
+  }
+
+  const otherResult = await pool.query('SELECT id FROM users WHERE username = $1', [req.params.username]);
+  const other = otherResult.rows[0];
+  if (!other) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  if (other.id === userId) {
+    return res.json({ status: 'self' });
+  }
+
+  const result = await pool.query(
+    `SELECT requester_id, status FROM friendships
+     WHERE (requester_id = $1 AND addressee_id = $2)
+        OR (requester_id = $2 AND addressee_id = $1)`,
+    [userId, other.id]
+  );
+  const row = result.rows[0];
+
+  if (!row) return res.json({ status: 'none' });
+  if (row.status === 'accepted') return res.json({ status: 'friends' });
+  res.json({ status: row.requester_id === userId ? 'outgoing' : 'incoming' });
+});
+
+app.post('/api/friends', async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'You must be logged in to add friends' });
+  }
+
+  const { username } = req.body;
+  if (!username || !username.trim()) {
+    return res.status(400).json({ error: 'username is required' });
+  }
+
+  const targetResult = await pool.query('SELECT id FROM users WHERE username = $1', [username.trim()]);
+  const target = targetResult.rows[0];
+  if (!target) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  if (target.id === userId) {
+    return res.status(400).json({ error: 'You cannot friend yourself' });
+  }
+
+  const existing = await pool.query(
+    `SELECT id FROM friendships
+     WHERE (requester_id = $1 AND addressee_id = $2)
+        OR (requester_id = $2 AND addressee_id = $1)`,
+    [userId, target.id]
+  );
+  if (existing.rows[0]) {
+    return res.status(409).json({ error: 'A friend request already exists between you two' });
+  }
+
+  await pool.query(
+    'INSERT INTO friendships (requester_id, addressee_id) VALUES ($1, $2)',
+    [userId, target.id]
+  );
+
+  res.status(201).json({ status: 'outgoing' });
+});
+
+app.post('/api/friends/:username/accept', async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'You must be logged in' });
+  }
+
+  const requesterResult = await pool.query('SELECT id FROM users WHERE username = $1', [req.params.username]);
+  const requester = requesterResult.rows[0];
+  if (!requester) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const result = await pool.query(
+    `UPDATE friendships SET status = 'accepted'
+     WHERE requester_id = $1 AND addressee_id = $2 AND status = 'pending'
+     RETURNING id`,
+    [requester.id, userId]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ error: 'No pending request from that user' });
+  }
+
+  res.json({ status: 'friends' });
+});
+
+// Covers three cases with one route: canceling a request you sent,
+// declining a request you received, and unfriending an accepted friend.
+app.delete('/api/friends/:username', async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: 'You must be logged in' });
+  }
+
+  const otherResult = await pool.query('SELECT id FROM users WHERE username = $1', [req.params.username]);
+  const other = otherResult.rows[0];
+  if (!other) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  await pool.query(
+    `DELETE FROM friendships
+     WHERE (requester_id = $1 AND addressee_id = $2)
+        OR (requester_id = $2 AND addressee_id = $1)`,
+    [userId, other.id]
+  );
+
+  res.json({ status: 'none' });
 });
 
 app.listen(PORT, () => {

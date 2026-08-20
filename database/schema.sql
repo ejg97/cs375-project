@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS review_votes CASCADE;
+DROP TABLE IF EXISTS friendships CASCADE;
 DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS movies  CASCADE;
 DROP TABLE IF EXISTS users   CASCADE;
@@ -68,3 +69,25 @@ CREATE TABLE review_votes (
 
 -- Tallying likes/dislikes for all reviews on a movie page.
 CREATE INDEX idx_review_votes_review ON review_votes (review_id);
+
+
+-- One row per friend request. The request is directional (requester ->
+-- addressee) but once accepted the friendship is symmetric, so "my
+-- friends"/"my status with this user" queries must check both columns —
+-- there is no second row for the reverse direction.
+-- No 'declined' status: a decline or an unfriend just deletes the row,
+-- which also lets either side send a fresh request afterward.
+CREATE TABLE friendships (
+  id           SERIAL PRIMARY KEY,
+  requester_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  addressee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status       TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CHECK (requester_id <> addressee_id),
+  UNIQUE (requester_id, addressee_id)
+);
+
+-- Looking up "do I have a relationship with this user" from either side.
+CREATE INDEX idx_friendships_requester ON friendships (requester_id);
+CREATE INDEX idx_friendships_addressee ON friendships (addressee_id);

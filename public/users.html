@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile - Movie Reviews</title>
+  <title>Find People - Movie Reviews</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AC</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -17,32 +17,22 @@
   </header>
 
   <main>
-    <a class="back-link" href="index.html">&larr; Back to search</a>
-
-    <div id="profile">
-      <h1 id="profile-username"></h1>
-      <p id="profile-joined"></p>
-      <div id="friend-action"></div>
-    </div>
-
-    <section id="friend-requests-section" hidden>
-      <h2>Friend requests</h2>
-      <div id="friend-requests"></div>
+    <section class="hero">
+      <h1>Find people</h1>
+      <p>Search for other users by username.</p>
+      <form id="user-search-form" class="search-form">
+        <input type="text" id="user-search-input" placeholder="Search usernames..." autocomplete="off">
+        <button type="submit" class="btn">Search</button>
+      </form>
     </section>
 
-    <section id="friends-section">
-      <h2>Friends</h2>
-      <div id="friends-list"></div>
-    </section>
-
-    <section id="profile-reviews-section">
-      <h2>Reviews</h2>
-      <div id="profile-reviews"></div>
+    <section class="results-section">
+      <div id="user-results"></div>
     </section>
   </main>
 
   <script src="escapeHtml.js"></script>
   <script src="nav.js"></script>
-  <script src="profile.js"></script>
+  <script src="users.js"></script>
 </body>
 </html>

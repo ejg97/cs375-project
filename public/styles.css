@@ -129,6 +129,17 @@ button {
   text-decoration: underline;
 }
 
+.btn-secondary {
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-small {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+
 .back-link {
   display: inline-block;
   margin-bottom: 1.5rem;
@@ -187,13 +198,13 @@ label {
   margin: 0 0 1.25rem;
 }
 
-#search-form {
+.search-form {
   display: flex;
   gap: 0.6rem;
   max-width: 480px;
 }
 
-#search-form input {
+.search-form input {
   flex: 1;
 }
 
@@ -543,6 +554,63 @@ label {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* ---------- Friends ---------- */
+#friend-action {
+  margin-top: 0.8rem;
+}
+
+#friend-requests {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.friend-request {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.7rem 1rem;
+}
+
+.friend-request a {
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.friend-request a:hover {
+  text-decoration: underline;
+}
+
+#friends-section {
+  margin-bottom: 2rem;
+}
+
+#friends-list,
+#user-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.friend-chip {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.friend-chip:hover {
+  border-color: var(--accent-soft);
 }
 
 /* ---------- Auth pages ---------- */

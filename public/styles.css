@@ -556,6 +556,49 @@ label {
   color: var(--accent);
 }
 
+/* ---------- Comment threads ---------- */
+.comments {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.comment {
+  padding: 0.5rem 0;
+}
+
+.comment + .comment {
+  border-top: 1px solid var(--border);
+}
+
+.comment-username {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.comment-date {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.comment-body {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.comment-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  align-items: center;
+}
+
+.comment-form .comment-input {
+  flex: 1;
+}
+
 /* ---------- Friends ---------- */
 #friend-action {
   margin-top: 0.8rem;

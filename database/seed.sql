@@ -36,3 +36,10 @@ INSERT INTO reviews (user_id, movie_id, rating, body) VALUES
   (1, 1, 5, 'Test review. Holds up on rewatch.'),
   (2, 1, 4, 'Test review. The ending still bothers me.'),
   (1, 2, 5, 'Test review. Ledger carries the whole thing.');
+
+-- A couple of replies so the comment thread under a review has something to
+-- render while we are building it.
+INSERT INTO comments (review_id, user_id, body) VALUES
+  (1, 2, 'Test comment. Agreed, the practical effects hold up especially well.'),
+  (1, 3, 'Test comment. Which ending do you think it actually is?'),
+  (2, 1, 'Test comment. Fair, the top never really settling either way is the point though.');

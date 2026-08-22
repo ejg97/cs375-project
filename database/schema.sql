@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS comments CASCADE;
 DROP TABLE IF EXISTS review_votes CASCADE;
 DROP TABLE IF EXISTS friendships CASCADE;
 DROP TABLE IF EXISTS reviews CASCADE;
@@ -70,6 +71,15 @@ CREATE TABLE review_votes (
 -- Tallying likes/dislikes for all reviews on a movie page.
 CREATE INDEX idx_review_votes_review ON review_votes (review_id);
 
+-- A reply to a review. Flat, not threaded — no parent_comment_id. A comment
+-- thread on a review is just a chronological list underneath it.
+CREATE TABLE comments (
+  id         SERIAL PRIMARY KEY,
+  review_id  INTEGER NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+  body       TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- One row per friend request. The request is directional (requester ->
 -- addressee) but once accepted the friendship is symmetric, so "my

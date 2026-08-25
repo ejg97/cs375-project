@@ -6,18 +6,12 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 const { Pool } = require("pg");
 
-const username = process.env.DATABASE_USERNAME;
-const password = process.env.DATABASE_PASSWORD;
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const pool = new Pool({
-  user: username,
-  host: "localhost",
-  database: "moviereview",
-  password: password,
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 // parse JSON bodies on incoming requests

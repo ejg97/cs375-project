@@ -656,6 +656,150 @@ label {
   border-color: var(--accent-soft);
 }
 
+/* ---------- Messages ---------- */
+.messages-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.conversation-list {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.conversation-item {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.85rem;
+}
+
+.conversation-item:hover {
+  border-color: var(--accent-soft);
+}
+
+.conversation-item.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.conversation-username {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.conversation-preview {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-thread {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+.message-thread-header {
+  font-weight: 600;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.message-thread-header a {
+  text-decoration: none;
+}
+
+.message-thread-header a:hover {
+  text-decoration: underline;
+}
+
+.message-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  max-height: 50vh;
+  margin-bottom: 1rem;
+}
+
+.message-bubble {
+  max-width: 75%;
+  border-radius: var(--radius);
+  padding: 0.5rem 0.8rem;
+}
+
+.message-bubble.from-me {
+  align-self: flex-end;
+  background: var(--accent-soft);
+}
+
+.message-bubble.from-them {
+  align-self: flex-start;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+}
+
+.message-body {
+  margin: 0;
+  word-break: break-word;
+}
+
+.message-date {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+}
+
+.message-form {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
+.message-form textarea {
+  flex: 1;
+  min-height: 2.75rem;
+  max-height: 8rem;
+}
+
+@media (max-width: 700px) {
+  .messages-layout {
+    flex-direction: column;
+  }
+
+  .conversation-list {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .conversation-item {
+    min-width: 180px;
+  }
+}
+
 /* ---------- Auth pages ---------- */
 .auth-main {
   max-width: 420px;

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages - Movie Reviews</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AC</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html">🎬 Movie Reviews</a>
+      <p class="tagline">Search, rate, and review anything TMDB knows about</p>
+      <span id="nav-user"></span>
+    </div>
+  </header>
+
+  <main>
+    <a class="back-link" href="index.html">&larr; Back to search</a>
+
+    <h1>Messages</h1>
+
+    <p id="messages-login-required" class="state-message" hidden>
+      You need to be logged in to view your messages. <a href="login.html">Log in</a>
+    </p>
+
+    <div id="messages-layout" class="messages-layout" hidden>
+      <aside id="conversation-list" class="conversation-list"></aside>
+      <section id="message-thread" class="message-thread">
+        <p class="state-message">Select a conversation, or a friend, to start chatting.</p>
+      </section>
+    </div>
+  </main>
+
+  <script src="escapeHtml.js"></script>
+  <script src="nav.js"></script>
+  <script src="messages.js"></script>
+</body>
+</html>

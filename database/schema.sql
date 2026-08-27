@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS comments CASCADE;
 DROP TABLE IF EXISTS review_votes CASCADE;
 DROP TABLE IF EXISTS friendships CASCADE;
@@ -101,3 +102,23 @@ CREATE TABLE friendships (
 -- Looking up "do I have a relationship with this user" from either side.
 CREATE INDEX idx_friendships_requester ON friendships (requester_id);
 CREATE INDEX idx_friendships_addressee ON friendships (addressee_id);
+
+-- A direct message between two users. One row per message, not per
+-- conversation — a "conversation" is just every row where the two user ids
+-- match, in either direction, read back in order. Sending is restricted to
+-- friends (checked by the route, not here), but a conversation's history
+-- stays readable after an unfriend so it doesn't just vanish.
+CREATE TABLE messages (
+  id           SERIAL PRIMARY KEY,
+  sender_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body         TEXT NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CHECK (sender_id <> recipient_id)
+);
+
+-- Loading a conversation ("all messages between me and X") or the
+-- conversation list ("all messages involving me") from either side.
+CREATE INDEX idx_messages_sender ON messages (sender_id);
+CREATE INDEX idx_messages_recipient ON messages (recipient_id);

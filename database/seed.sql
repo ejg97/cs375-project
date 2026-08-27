@@ -43,3 +43,10 @@ INSERT INTO comments (review_id, user_id, body) VALUES
   (1, 2, 'Test comment. Agreed, the practical effects hold up especially well.'),
   (1, 3, 'Test comment. Which ending do you think it actually is?'),
   (2, 1, 'Test comment. Fair, the top never really settling either way is the point though.');
+
+-- A short back-and-forth so the messages page has a conversation to render.
+-- (testuser and bulat are not friended by this seed data — friending them
+-- first via the UI, or adding a row to friendships, is needed to reply.)
+INSERT INTO messages (sender_id, recipient_id, body) VALUES
+  (1, 2, 'Test message. Have you seen Inception?'),
+  (2, 1, 'Test message. Yeah, just rewatched it actually.');

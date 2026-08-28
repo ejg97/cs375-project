@@ -118,6 +118,8 @@ app.get("/api/movies/:id", async (req, res) => {
   });
 });
 
+// "You might also like" row on the movie detail page. Same TMDB passthrough
+// shape as /search and /popular, just scoped to one movie.
 app.get("/api/movies/:id/similar", async (req, res) => {
   const id = req.params.id;
 
@@ -712,12 +714,167 @@ app.delete("/api/friends/:username", async (req, res) => {
   res.json({ status: "none" });
 });
 
+// Registered before /api/messages/:username so the literal path
+// "conversations" isn't swallowed as a :username value (same trap that hit
+// /api/users/search).
+app.get("/api/messages/conversations", async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "You must be logged in" });
+  }
+
+  const result = await pool.query(
+    `SELECT messages.sender_id, messages.body, messages.created_at,
+            sender.username    AS sender_username,
+            recipient.username AS recipient_username,
+            CASE WHEN messages.sender_id = $1 THEN messages.recipient_id
+                 ELSE messages.sender_id END AS other_id
+     FROM messages
+     JOIN users AS sender    ON sender.id    = messages.sender_id
+     JOIN users AS recipient ON recipient.id = messages.recipient_id
+     WHERE messages.sender_id = $1 OR messages.recipient_id = $1
+     ORDER BY messages.created_at DESC`,
+    [userId],
+  );
+
+  // Rows arrive newest-first, so the first row seen for a given other_id is
+  // that conversation's latest message — same "pull everything, reduce in
+  // JS" approach as the review votes/comments tallies above.
+  const conversations = [];
+  const seen = new Set();
+
+  for (const row of result.rows) {
+    if (seen.has(row.other_id)) continue;
+    seen.add(row.other_id);
+
+    const fromMe = row.sender_id === userId;
+    conversations.push({
+      username: fromMe ? row.recipient_username : row.sender_username,
+      lastMessage: row.body,
+      lastMessageAt: row.created_at,
+      fromMe,
+    });
+  }
+
+  res.json(conversations);
+});
+
+app.get("/api/messages/:username", async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "You must be logged in" });
+  }
+
+  const otherResult = await pool.query(
+    "SELECT id, username FROM users WHERE username = $1",
+    [req.params.username],
+  );
+  const other = otherResult.rows[0];
+  if (!other) {
+    return res.status(404).json({ error: "User not found" });
+  }
+  if (other.id === userId) {
+    return res.status(400).json({ error: "You cannot message yourself" });
+  }
+
+  const friendshipResult = await pool.query(
+    `SELECT status FROM friendships
+     WHERE (requester_id = $1 AND addressee_id = $2)
+        OR (requester_id = $2 AND addressee_id = $1)`,
+    [userId, other.id],
+  );
+  const isFriend = friendshipResult.rows[0]?.status === "accepted";
+
+  const messagesResult = await pool.query(
+    `SELECT id, sender_id, body, created_at FROM messages
+     WHERE (sender_id = $1 AND recipient_id = $2)
+        OR (sender_id = $2 AND recipient_id = $1)
+     ORDER BY created_at ASC`,
+    [userId, other.id],
+  );
+
+  // A conversation with a since-unfriended user stays readable — only
+  // sending new messages requires currently being friends.
+  if (!isFriend && messagesResult.rows.length === 0) {
+    return res.status(403).json({ error: "You can only message friends" });
+  }
+
+  res.json({
+    username: other.username,
+    isFriend,
+    messages: messagesResult.rows.map((row) => ({
+      id: row.id,
+      body: row.body,
+      createdAt: row.created_at,
+      fromMe: row.sender_id === userId,
+    })),
+  });
+});
+
+app.post("/api/messages/:username", async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "You must be logged in" });
+  }
+
+  const { body } = req.body;
+  if (!body || !body.trim()) {
+    return res.status(400).json({ error: "Message body is required" });
+  }
+
+  const otherResult = await pool.query(
+    "SELECT id FROM users WHERE username = $1",
+    [req.params.username],
+  );
+  const other = otherResult.rows[0];
+  if (!other) {
+    return res.status(404).json({ error: "User not found" });
+  }
+  if (other.id === userId) {
+    return res.status(400).json({ error: "You cannot message yourself" });
+  }
+
+  const friendshipResult = await pool.query(
+    `SELECT status FROM friendships
+     WHERE (requester_id = $1 AND addressee_id = $2)
+        OR (requester_id = $2 AND addressee_id = $1)`,
+    [userId, other.id],
+  );
+  if (friendshipResult.rows[0]?.status !== "accepted") {
+    return res.status(403).json({ error: "You can only message friends" });
+  }
+
+  const result = await pool.query(
+    `INSERT INTO messages (sender_id, recipient_id, body)
+     VALUES ($1, $2, $3)
+     RETURNING id, body, created_at`,
+    [userId, other.id, body.trim()],
+  );
+  const message = result.rows[0];
+
+  res.status(201).json({
+    id: message.id,
+    body: message.body,
+    createdAt: message.created_at,
+    fromMe: true,
+  });
+});
+
+// Personalized homepage feed. Seeded from movies this user (or their
+// friends) rated 4-5 stars, then expanded via TMDB's per-movie "similar"
+// endpoint and merged together -- that expansion step is what turns "movies
+// people I know liked" into actual discovery instead of a rehash of movies
+// they've probably already heard about. Falls back to TMDB's popular list
+// when there aren't enough seeds yet (new user, no friends, or nobody in
+// range has rated anything highly).
 app.get("/api/recommendations", async (req, res) => {
   const userId = req.session.userId;
   if (!userId) {
     return res.status(401).json({ error: "You must be logged in" });
   }
 
+  // Movies this user has already reviewed -- never recommend one of these
+  // back to them.
   const reviewedResult = await pool.query(
     `SELECT movies.tmdb_id
      FROM reviews
@@ -727,6 +884,9 @@ app.get("/api/recommendations", async (req, res) => {
   );
   const reviewedTmdbIds = new Set(reviewedResult.rows.map((row) => row.tmdb_id));
 
+  // Seed movies: this user's and their friends' 4-5 star reviews, most
+  // recently rated first. Friendship is symmetric but stored as one
+  // directional row, same CASE pattern as /api/users/:username/friends.
   const seedResult = await pool.query(
     `SELECT movies.tmdb_id
      FROM reviews
@@ -783,6 +943,8 @@ app.get("/api/recommendations", async (req, res) => {
     });
   }
 
+  // No seeds, or every similar movie TMDB returned was already reviewed --
+  // fall back to what's popular so the section is never just empty.
   const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_KEY}`;
 
   let tmdbRes;

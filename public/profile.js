@@ -134,7 +134,7 @@ function showFriendAction(status) {
   } else if (status === 'incoming') {
     friendActionEl.innerHTML = '<button type="button" id="friend-btn" class="btn" data-action="accept">Accept friend request</button>';
   } else if (status === 'friends') {
-    friendActionEl.innerHTML = '<button type="button" id="friend-btn" class="btn btn-secondary" data-action="unfriend">Unfriend</button>';
+    friendActionEl.innerHTML = `<a class="btn" href="messages.html?with=${encodeURIComponent(username)}">Message</a> <button type="button" id="friend-btn" class="btn btn-secondary" data-action="unfriend">Unfriend</button>`;
   } else {
     friendActionEl.innerHTML = '';
   }

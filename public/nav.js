@@ -13,7 +13,7 @@ async function loadNav() {
     }
 
     const user = await res.json();
-    el.innerHTML = `${peopleLink} &middot; <a href="profile.html?username=${encodeURIComponent(user.username)}">${escapeHtml(user.username)}</a> &middot; <button id="logout-btn" type="button" class="link-button">Log out</button>`;
+    el.innerHTML = `${peopleLink} &middot; <a href="messages.html">Messages</a> &middot; <a href="profile.html?username=${encodeURIComponent(user.username)}">${escapeHtml(user.username)}</a> &middot; <button id="logout-btn" type="button" class="link-button">Log out</button>`;
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await fetch('/api/logout', { method: 'POST' });

@@ -217,6 +217,12 @@ label {
   flex-wrap: wrap;
 }
 
+.results-note {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .movie-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

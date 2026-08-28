@@ -712,6 +712,99 @@ app.delete("/api/friends/:username", async (req, res) => {
   res.json({ status: "none" });
 });
 
+app.get("/api/recommendations", async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "You must be logged in" });
+  }
+
+  const reviewedResult = await pool.query(
+    `SELECT movies.tmdb_id
+     FROM reviews
+     JOIN movies ON reviews.movie_id = movies.id
+     WHERE reviews.user_id = $1`,
+    [userId],
+  );
+  const reviewedTmdbIds = new Set(reviewedResult.rows.map((row) => row.tmdb_id));
+
+  const seedResult = await pool.query(
+    `SELECT movies.tmdb_id
+     FROM reviews
+     JOIN movies ON reviews.movie_id = movies.id
+     WHERE reviews.rating >= 4
+       AND (
+         reviews.user_id = $1
+         OR reviews.user_id IN (
+           SELECT CASE WHEN friendships.requester_id = $1
+                       THEN friendships.addressee_id
+                       ELSE friendships.requester_id END
+           FROM friendships
+           WHERE (friendships.requester_id = $1 OR friendships.addressee_id = $1)
+             AND friendships.status = 'accepted'
+         )
+       )
+     GROUP BY movies.tmdb_id
+     ORDER BY MAX(reviews.created_at) DESC
+     LIMIT 8`,
+    [userId],
+  );
+  const seedTmdbIds = seedResult.rows.map((row) => row.tmdb_id);
+
+  const recommended = new Map();
+
+  if (seedTmdbIds.length > 0) {
+    await Promise.all(
+      seedTmdbIds.map(async (tmdbId) => {
+        const tmdbUrl = `https://api.themoviedb.org/3/movie/${encodeURIComponent(tmdbId)}/similar?api_key=${process.env.TMDB_KEY}`;
+
+        let tmdbRes;
+        try {
+          tmdbRes = await fetch(tmdbUrl);
+        } catch (err) {
+          return;
+        }
+        if (!tmdbRes.ok) return;
+
+        const data = await tmdbRes.json();
+        for (const movie of data.results) {
+          if (reviewedTmdbIds.has(movie.id)) continue;
+          if (!recommended.has(movie.id)) {
+            recommended.set(movie.id, mapTmdbMovie(movie));
+          }
+        }
+      }),
+    );
+  }
+
+  if (recommended.size > 0) {
+    return res.json({
+      personalized: true,
+      movies: Array.from(recommended.values()).slice(0, 12),
+    });
+  }
+
+  const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_KEY}`;
+
+  let tmdbRes;
+  try {
+    tmdbRes = await fetch(tmdbUrl);
+  } catch (err) {
+    return res.status(502).json({ error: "Failed to reach TMDB" });
+  }
+  if (!tmdbRes.ok) {
+    return res.status(502).json({ error: "TMDB request failed" });
+  }
+
+  const data = await tmdbRes.json();
+  res.json({
+    personalized: false,
+    movies: data.results
+      .filter((movie) => !reviewedTmdbIds.has(movie.id))
+      .map(mapTmdbMovie)
+      .slice(0, 12),
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

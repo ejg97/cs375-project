@@ -8,6 +8,8 @@ const yearEl = document.getElementById("movie-year");
 const ratingSummaryEl = document.getElementById("movie-rating-summary");
 const overviewEl = document.getElementById("movie-overview");
 const reviewsEl = document.getElementById("reviews");
+const similarSection = document.getElementById("similar-section");
+const similarMoviesEl = document.getElementById("similar-movies");
 const reviewFormSection = document.getElementById("review-form-section");
 const reviewForm = document.getElementById("review-form");
 const ratingError = document.getElementById("rating-error");
@@ -139,6 +141,47 @@ function showReviews(reviews) {
     `;
     })
     .join("");
+}
+
+function movieCardHtml(movie) {
+  const title = escapeHtml(movie.title);
+  const posterInner = movie.posterPath
+    ? `<img class="movie-card-img" src="https://image.tmdb.org/t/p/w342${movie.posterPath}" alt="${title} poster">`
+    : "🎬";
+  const posterClass = movie.posterPath
+    ? "movie-card-poster"
+    : "movie-card-poster poster-placeholder";
+
+  return `
+    <a class="movie-card" href="movie.html?id=${movie.tmdbId}">
+      <div class="${posterClass}">${posterInner}</div>
+      <div class="movie-card-body">
+        <h3 class="movie-card-title">${title}</h3>
+        <p class="movie-card-year">${movie.year || ""}</p>
+      </div>
+    </a>
+  `;
+}
+
+async function loadSimilar() {
+  if (!id) return;
+
+  try {
+    const res = await fetch(`/api/movies/${encodeURIComponent(id)}/similar`);
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const movies = await res.json();
+
+    if (movies.length === 0) {
+      similarSection.hidden = true;
+      return;
+    }
+
+    similarMoviesEl.innerHTML = movies.slice(0, 12).map(movieCardHtml).join("");
+    similarSection.hidden = false;
+  } catch (err) {
+    similarSection.hidden = true;
+    console.error(err);
+  }
 }
 
 function commentsHtml(comments) {
@@ -299,3 +342,4 @@ reviewForm.addEventListener("submit", async (e) => {
 loadMovie();
 loadReviews();
 loadReviewForm();
+loadSimilar();

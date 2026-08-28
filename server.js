@@ -118,6 +118,27 @@ app.get("/api/movies/:id", async (req, res) => {
   });
 });
 
+app.get("/api/movies/:id/similar", async (req, res) => {
+  const id = req.params.id;
+
+  const tmdbUrl = `https://api.themoviedb.org/3/movie/${encodeURIComponent(id)}/similar?api_key=${process.env.TMDB_KEY}`;
+
+  let tmdbRes;
+  try {
+    tmdbRes = await fetch(tmdbUrl);
+  } catch (err) {
+    return res.status(502).json({ error: "Failed to reach TMDB" });
+  }
+
+  if (!tmdbRes.ok) {
+    return res.status(502).json({ error: "TMDB request failed" });
+  }
+
+  const data = await tmdbRes.json();
+
+  res.json(data.results.map(mapTmdbMovie));
+});
+
 app.get("/api/movies/:id/reviews", async (req, res) => {
   const tmdbId = req.params.id;
   const userId = req.session.userId || null;

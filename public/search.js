@@ -3,6 +3,7 @@ const input = document.getElementById('search-input');
 const results = document.getElementById('results');
 const template = document.getElementById('result-template');
 const resultsHeading = document.getElementById('results-heading');
+const resultsNote = document.getElementById('results-note');
 const clearButton = document.getElementById('clear-search');
 
 form.addEventListener('submit', async (e) => {
@@ -15,7 +16,7 @@ form.addEventListener('submit', async (e) => {
 clearButton.addEventListener('click', () => {
   input.value = '';
   clearButton.hidden = true;
-  loadPopular();
+  loadDefault();
 });
 
 async function runSearch(q) {
@@ -34,8 +35,40 @@ async function runSearch(q) {
   }
 }
 
+async function loadDefault() {
+  const meRes = await fetch('/api/me');
+  if (meRes.ok) {
+    await loadRecommendations();
+  } else {
+    await loadPopular();
+  }
+}
+
+async function loadRecommendations() {
+  resultsHeading.textContent = 'Recommended for you';
+  hideNote();
+  showLoading();
+
+  try {
+    const res = await fetch('/api/recommendations');
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const { personalized, movies } = await res.json();
+
+    if (!personalized) {
+      resultsHeading.textContent = 'Popular Movies';
+      showNote('Rate a few movies to get personalized picks — here’s what’s popular for now.');
+    }
+
+    renderResults(movies, 'Nothing to show right now.');
+  } catch (err) {
+    showError();
+    console.error(err);
+  }
+}
+
 async function loadPopular() {
   resultsHeading.textContent = 'Popular Movies';
+  hideNote();
   showLoading();
 
   try {
@@ -47,6 +80,15 @@ async function loadPopular() {
     showError();
     console.error(err);
   }
+}
+
+function showNote(text) {
+  resultsNote.textContent = text;
+  resultsNote.hidden = false;
+}
+
+function hideNote() {
+  resultsNote.hidden = true;
 }
 
 function showLoading() {
@@ -93,4 +135,4 @@ function makeResult(movie) {
   return node;
 }
 
-loadPopular();
+loadDefault();

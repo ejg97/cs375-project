@@ -112,6 +112,29 @@ app.get("/api/movies/:id", async (req, res) => {
   });
 });
 
+// "You might also like" row on the movie detail page. Same TMDB passthrough
+// shape as /search and /popular, just scoped to one movie.
+app.get("/api/movies/:id/similar", async (req, res) => {
+  const id = req.params.id;
+
+  const tmdbUrl = `https://api.themoviedb.org/3/movie/${encodeURIComponent(id)}/similar?api_key=${process.env.TMDB_KEY}`;
+
+  let tmdbRes;
+  try {
+    tmdbRes = await fetch(tmdbUrl);
+  } catch (err) {
+    return res.status(502).json({ error: "Failed to reach TMDB" });
+  }
+
+  if (!tmdbRes.ok) {
+    return res.status(502).json({ error: "TMDB request failed" });
+  }
+
+  const data = await tmdbRes.json();
+
+  res.json(data.results.map(mapTmdbMovie));
+});
+
 app.get("/api/movies/:id/reviews", async (req, res) => {
   const tmdbId = req.params.id;
   const userId = req.session.userId || null;
@@ -827,6 +850,113 @@ app.post("/api/messages/:username", async (req, res) => {
     body: message.body,
     createdAt: message.created_at,
     fromMe: true,
+  });
+});
+
+// Personalized homepage feed. Seeded from movies this user (or their
+// friends) rated 4-5 stars, then expanded via TMDB's per-movie "similar"
+// endpoint and merged together -- that expansion step is what turns "movies
+// people I know liked" into actual discovery instead of a rehash of movies
+// they've probably already heard about. Falls back to TMDB's popular list
+// when there aren't enough seeds yet (new user, no friends, or nobody in
+// range has rated anything highly).
+app.get("/api/recommendations", async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "You must be logged in" });
+  }
+
+  // Movies this user has already reviewed -- never recommend one of these
+  // back to them.
+  const reviewedResult = await pool.query(
+    `SELECT movies.tmdb_id
+     FROM reviews
+     JOIN movies ON reviews.movie_id = movies.id
+     WHERE reviews.user_id = $1`,
+    [userId],
+  );
+  const reviewedTmdbIds = new Set(reviewedResult.rows.map((row) => row.tmdb_id));
+
+  // Seed movies: this user's and their friends' 4-5 star reviews, most
+  // recently rated first. Friendship is symmetric but stored as one
+  // directional row, same CASE pattern as /api/users/:username/friends.
+  const seedResult = await pool.query(
+    `SELECT movies.tmdb_id
+     FROM reviews
+     JOIN movies ON reviews.movie_id = movies.id
+     WHERE reviews.rating >= 4
+       AND (
+         reviews.user_id = $1
+         OR reviews.user_id IN (
+           SELECT CASE WHEN friendships.requester_id = $1
+                       THEN friendships.addressee_id
+                       ELSE friendships.requester_id END
+           FROM friendships
+           WHERE (friendships.requester_id = $1 OR friendships.addressee_id = $1)
+             AND friendships.status = 'accepted'
+         )
+       )
+     GROUP BY movies.tmdb_id
+     ORDER BY MAX(reviews.created_at) DESC
+     LIMIT 8`,
+    [userId],
+  );
+  const seedTmdbIds = seedResult.rows.map((row) => row.tmdb_id);
+
+  const recommended = new Map();
+
+  if (seedTmdbIds.length > 0) {
+    await Promise.all(
+      seedTmdbIds.map(async (tmdbId) => {
+        const tmdbUrl = `https://api.themoviedb.org/3/movie/${encodeURIComponent(tmdbId)}/similar?api_key=${process.env.TMDB_KEY}`;
+
+        let tmdbRes;
+        try {
+          tmdbRes = await fetch(tmdbUrl);
+        } catch (err) {
+          return;
+        }
+        if (!tmdbRes.ok) return;
+
+        const data = await tmdbRes.json();
+        for (const movie of data.results) {
+          if (reviewedTmdbIds.has(movie.id)) continue;
+          if (!recommended.has(movie.id)) {
+            recommended.set(movie.id, mapTmdbMovie(movie));
+          }
+        }
+      }),
+    );
+  }
+
+  if (recommended.size > 0) {
+    return res.json({
+      personalized: true,
+      movies: Array.from(recommended.values()).slice(0, 12),
+    });
+  }
+
+  // No seeds, or every similar movie TMDB returned was already reviewed --
+  // fall back to what's popular so the section is never just empty.
+  const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_KEY}`;
+
+  let tmdbRes;
+  try {
+    tmdbRes = await fetch(tmdbUrl);
+  } catch (err) {
+    return res.status(502).json({ error: "Failed to reach TMDB" });
+  }
+  if (!tmdbRes.ok) {
+    return res.status(502).json({ error: "TMDB request failed" });
+  }
+
+  const data = await tmdbRes.json();
+  res.json({
+    personalized: false,
+    movies: data.results
+      .filter((movie) => !reviewedTmdbIds.has(movie.id))
+      .map(mapTmdbMovie)
+      .slice(0, 12),
   });
 });
 

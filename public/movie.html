@@ -1,75 +1,89 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Screening Room</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AC</text></svg>">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a class="brand" href="index.html">🎬 The Screening Room</a>
-      <p class="tagline">Search, rate, and review anything TMDB knows about</p>
-      <span id="nav-user"></span>
-    </div>
-  </header>
-
-  <main>
-    <a class="back-link" href="index.html">&larr; Back to search</a>
-
-    <div id="movie" class="movie-detail">
-      <div id="movie-poster-wrap" class="movie-detail-poster">
-        <img id="movie-poster" alt="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Screening Room</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AC</text></svg>"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="brand" href="index.html">🎬 The Screening Room</a>
+        <p class="tagline">
+          Search, rate, and review anything TMDB knows about
+        </p>
+        <span id="nav-user"></span>
       </div>
-      <div class="movie-detail-info">
-        <h1 id="movie-title"></h1>
-        <p id="movie-year" class="movie-year"></p>
-        <p id="movie-rating-summary" class="movie-rating-summary" hidden></p>
-        <p id="movie-overview" class="movie-overview"></p>
+    </header>
+
+    <main>
+      <a class="back-link" href="index.html">&larr; Back to search</a>
+
+      <div id="movie" class="movie-detail">
+        <div id="movie-poster-wrap" class="movie-detail-poster">
+          <img id="movie-poster" alt="" />
+        </div>
+        <div class="movie-detail-info">
+          <h1 id="movie-title"></h1>
+          <p id="movie-year" class="movie-year"></p>
+          <p id="movie-rating-summary" class="movie-rating-summary" hidden></p>
+          <p id="movie-overview" class="movie-overview"></p>
+        </div>
       </div>
-    </div>
 
-    <section id="review-form-section" class="card">
-      <h2>Write a review</h2>
-      <form id="review-form">
-        <div class="form-row">
-          <fieldset class="star-rating-field">
-            <legend>Rating</legend>
-            <div class="star-rating" id="star-rating">
-              <input type="radio" id="star5" name="rating" value="5">
-              <label for="star5" title="5 stars">★</label>
-              <input type="radio" id="star4" name="rating" value="4">
-              <label for="star4" title="4 stars">★</label>
-              <input type="radio" id="star3" name="rating" value="3">
-              <label for="star3" title="3 stars">★</label>
-              <input type="radio" id="star2" name="rating" value="2">
-              <label for="star2" title="2 stars">★</label>
-              <input type="radio" id="star1" name="rating" value="1">
-              <label for="star1" title="1 star">★</label>
-            </div>
-          </fieldset>
-          <p id="rating-error" class="field-error" hidden>Please select a rating.</p>
-        </div>
-        <div class="form-row">
-          <label for="review-body">Review</label>
-          <textarea id="review-body" rows="4"></textarea>
-        </div>
-        <div class="form-row">
-          <button type="submit" id="review-submit" class="btn">Submit review</button>
-        </div>
-      </form>
-    </section>
+      <section id="review-form-section" class="card">
+        <h2>Write a review</h2>
+        <form id="review-form">
+          <div class="form-row">
+            <fieldset class="star-rating-field">
+              <legend>Rating</legend>
+              <div class="star-rating" id="star-rating">
+                <input type="radio" id="star5" name="rating" value="5" />
+                <label for="star5" title="5 stars">★</label>
+                <input type="radio" id="star4" name="rating" value="4" />
+                <label for="star4" title="4 stars">★</label>
+                <input type="radio" id="star3" name="rating" value="3" />
+                <label for="star3" title="3 stars">★</label>
+                <input type="radio" id="star2" name="rating" value="2" />
+                <label for="star2" title="2 stars">★</label>
+                <input type="radio" id="star1" name="rating" value="1" />
+                <label for="star1" title="1 star">★</label>
+              </div>
+            </fieldset>
+            <p id="rating-error" class="field-error" hidden>
+              Please select a rating.
+            </p>
+          </div>
+          <div class="form-row">
+            <label for="review-body">Review</label>
+            <textarea id="review-body" rows="4"></textarea>
+          </div>
+          <div class="form-row">
+            <button type="submit" id="review-submit" class="btn">
+              Submit review
+            </button>
+          </div>
+        </form>
+      </section>
 
-    <section id="reviews-section">
-      <h2>Reviews</h2>
-      <div id="reviews"></div>
-    </section>
-  </main>
+      <section id="reviews-section">
+        <h2>Reviews</h2>
+        <div id="reviews"></div>
+      </section>
 
-  <script src="escapeHtml.js"></script>
-  <script src="nav.js"></script>
-  <script src="movie.js"></script>
-</body>
+      <section id="similar-section" hidden>
+        <h2>You might also like</h2>
+        <div id="similar-movies" class="movie-grid"></div>
+      </section>
+    </main>
+
+    <script src="escapeHtml.js"></script>
+    <script src="nav.js"></script>
+    <script src="movie.js"></script>
+  </body>
 </html>

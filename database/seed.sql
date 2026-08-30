@@ -3,17 +3,15 @@
 -- Run AFTER schema.sql:  psql -d moviereview -f database/seed.sql
 --
 -- Assumes schema.sql was just run, so the tables are empty and the serial
--- sequences start at 1. This gives us a user with id = 1, which is what the
--- review routes are hardcoded to until real authentication lands in week 2.
+-- sequences start at 1.
 
 INSERT INTO users (username, password_hash) VALUES
   ('testuser', 'placeholder-not-a-real-hash'),
   ('bulat',    'placeholder-not-a-real-hash'),
   ('ethan',    'placeholder-not-a-real-hash');
 
--- NOTE: these password hashes are junk strings, not bcrypt output. Once auth
--- exists these accounts will not be able to log in until the hashes are
--- replaced with real ones.
+-- NOTE: these password hashes are junk strings, not bcrypt output, so these
+-- accounts cannot log in until the hashes are replaced with real ones.
 
 
 -- A couple of movies and reviews so the movie detail and profile pages have

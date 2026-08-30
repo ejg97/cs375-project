@@ -14,8 +14,7 @@ const ratingError = document.getElementById("rating-error");
 const reviewSubmitButton = document.getElementById("review-submit");
 const bodyInput = document.getElementById("review-body");
 
-// filled in once the movie loads; needed to lazily create the local
-// movies row when a review is submitted
+// filled in once the movie loads, so a submitted review can create the local movies row
 let currentMovie = null;
 
 function starsHtml(rating) {

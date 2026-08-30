@@ -14,23 +14,19 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-// parse JSON bodies on incoming requests
 app.use(express.json());
 
-// cookie session, holds session.userId once logged in
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }, // 1 week
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 },
   }),
 );
 
-// serve everything in /public as static files
 app.use(express.static(path.join(__dirname, "public")));
 
-// example API route
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from the server" });
 });
@@ -69,9 +65,7 @@ app.get("/api/movies/search", async (req, res) => {
   res.json(data.results.map(mapTmdbMovie));
 });
 
-// Passthrough to TMDB's currently-popular list, used to fill the homepage
-// before the user has searched for anything. Same shape as /search, no DB
-// writes — movies rows are only ever created lazily when reviewed.
+// Fills the homepage before the user has searched for anything.
 app.get("/api/movies/popular", async (req, res) => {
   const tmdbUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_KEY}`;
 
@@ -691,9 +685,8 @@ app.delete("/api/friends/:username", async (req, res) => {
   res.json({ status: "none" });
 });
 
-// Registered before /api/messages/:username so the literal path
-// "conversations" isn't swallowed as a :username value (same trap that hit
-// /api/users/search).
+// Same route-ordering trap as /api/users/search above — must be registered
+// before /api/messages/:username.
 app.get("/api/messages/conversations", async (req, res) => {
   const userId = req.session.userId;
   if (!userId) {

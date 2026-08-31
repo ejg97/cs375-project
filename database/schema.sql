@@ -46,10 +46,8 @@ CREATE TABLE reviews (
 
 -- reviews.movie_id points at movies.id (our local serial), NOT tmdb_id.
 
--- All reviews for a movie — the movie detail page.
 CREATE INDEX idx_reviews_movie ON reviews (movie_id);
 
--- All reviews by a user — the profile page.
 -- The UNIQUE constraint above already indexes (user_id, movie_id), but this
 -- makes the user-only lookup cheaper.
 CREATE INDEX idx_reviews_user ON reviews (user_id);
@@ -69,7 +67,6 @@ CREATE TABLE review_votes (
   UNIQUE (review_id, user_id)
 );
 
--- Tallying likes/dislikes for all reviews on a movie page.
 CREATE INDEX idx_review_votes_review ON review_votes (review_id);
 
 -- A reply to a review. Flat, not threaded — no parent_comment_id. A comment
@@ -99,7 +96,6 @@ CREATE TABLE friendships (
   UNIQUE (requester_id, addressee_id)
 );
 
--- Looking up "do I have a relationship with this user" from either side.
 CREATE INDEX idx_friendships_requester ON friendships (requester_id);
 CREATE INDEX idx_friendships_addressee ON friendships (addressee_id);
 
@@ -118,7 +114,5 @@ CREATE TABLE messages (
   CHECK (sender_id <> recipient_id)
 );
 
--- Loading a conversation ("all messages between me and X") or the
--- conversation list ("all messages involving me") from either side.
 CREATE INDEX idx_messages_sender ON messages (sender_id);
 CREATE INDEX idx_messages_recipient ON messages (recipient_id);
